@@ -1,0 +1,175 @@
+VSL Keypoint Editor — Project Structure
+
+📦 Thư mục dự án:
+├── 📄 index.html                  ← Mở file này bằng trình duyệt để chạy app
+├── 📄 app.js                      ← Logic chính (UI, drag/drop, undo/redo, autosave)
+├── 📄 mediapipe-extractor.js      ← Hàm trích xuất keypoints (MediaPipe Hands)
+├── 📄 style.css                   ← CSS (giao diện)
+│
+├── 📄 sample-keypoints.json       ← Dữ liệu keypoints mẫu (2 frames test)
+│
+├── 📄 README.md                   ← Tài liệu chi tiết
+├── 📄 QUICKSTART.md               ← Hướng dẫn nhanh cho CTV
+└── 📄 PROJECT_STRUCTURE.txt       ← File này
+
+---
+
+Luồng dữ liệu:
+
+Video .mp4
+    ↓
+[Tải Video] → video element
+    ↓
+[Auto-extract button / Auto-extract on load]
+    ↓ (gọi mediapipe-extractor.js)
+    ↓
+window.mediaPipeExtractFrames(video)
+    ↓ (frame-by-frame processing)
+    ↓
+state.frames = [ [21 points], [21 points], ... ]
+    ↓
+Canvas overlay vẽ các điểm + skeleton
+    ↓
+[Drag & drop sửa lỗi]
+    ↓
+state.frames được update
+    ↓
+[Save / Download]
+    ↓
+JSON file được tải về
+
+---
+
+Các thành phần chính:
+
+1. **index.html**
+   - Tải MediaPipe từ CDN
+   - Layout: video + canvas overlay + controls
+   - Nút: Upload, Prev/Next Frame, Undo/Redo, Zoom, Autosave, Extract, Save
+
+2. **app.js** (~500 dòng)
+   - State quản lý: frames, fps, view (zoom/pan), history (undo/redo)
+   - Upload video/JSON handler
+   - Canvas drawing: vẽ bones + keypoints
+   - Mouse interactions: drag/drop, hover, pan
+   - Undo/Redo logic
+   - Autosave (localStorage)
+   - Keyboard shortcuts (Ctrl+Z/Y)
+
+3. **mediapipe-extractor.js** (~150 dòng)
+   - Tải MediaPipe Hands từ CDN
+   - Frame-by-frame video processing
+   - Extract 21 hand landmarks per frame
+   - Return array: [ frame0: [21 points], frame1: [21 points], ... ]
+
+4. **style.css**
+   - Minimal, responsive design
+   - Canvas overlay positioning
+   - Button styles + disabled states
+   - Tooltip styles
+
+5. **sample-keypoints.json**
+   - 2 frames test data × 21 points
+   - Format: [x: 0..1, y: 0..1, z: 0]
+   - Dùng để test UI mà không cần video/extraction
+
+---
+
+Yêu cầu:
+
+- Browser: Chrome/Edge/Firefox (hỗ trợ Canvas, MediaPipe)
+- Video: MP4 format (H.264 codec)
+- JSON: Array hoặc {frames: [...]}
+- Internet: Để tải MediaPipe từ CDN (lần đầu)
+
+---
+
+Cấu hình:
+
+- FPS: Mặc định 25, thay đổi ở ô "FPS" trên giao diện
+- Point radius: 9px (có thể chỉnh trong app.js: state.pointRadius)
+- Max undo per frame: 50 (có thể chỉnh trong app.js: history)
+- Autosave key: "vsl_editor_autosave" (localStorage)
+- Zoom range: 0.2x - 4x
+
+---
+
+Tính năng MVP:
+
+✅ Upload video + JSON
+✅ Auto-extract MediaPipe Hands (21 points)
+✅ Render keypoints + skeleton
+✅ Drag & drop chỉnh sửa
+✅ Undo/Redo
+✅ Zoom/Pan
+✅ Frame-by-frame navigation
+✅ Hover tooltip
+✅ Autosave (localStorage)
+✅ Export JSON
+✅ Auto-extract on load (checkbox)
+
+---
+
+Mở rộng tương lai:
+
+1. Body pose (33 points thay 21)
+2. Multi-hand support
+3. Batch processing
+4. Confidence visualization
+5. Video export (với keypoints rendered)
+6. Live webcam extraction
+7. Custom skeleton/bone config
+8. CSV export
+9. Frame annotation (text labels)
+10. 3D visualization (WebGL)
+
+---
+
+Developer notes:
+
+- Architecture: Vanilla JS IIFE (no build tool needed)
+- State management: Single state object + history per frame
+- Canvas: 2D context + view transform (scale, offset)
+- View transform: ctx.setTransform(scale, 0, 0, scale, offsetX, offsetY)
+- Hit testing: Distance-based (radius = 1.4x pointRadius)
+- Drag normalization: Store [0..1], render at display size
+- MediaPipe async: Uses Promise + frame seeking (video.currentTime = t)
+
+---
+
+Performance notes:
+
+- Extraction: ~1-2 sec per frame (depends on GPU/CPU)
+- Rendering: 60 FPS canvas draw loop
+- Canvas size: Matches video resolution (usually 1280x720 or 640x480)
+- Memory: Frames stored in state.frames; set to null to free
+- Browser tab: Stay focused during extraction (MediaPipe performance affected)
+
+---
+
+Testing checklist:
+
+□ Open index.html in browser
+□ Load sample-keypoints.json
+□ Hover tooltip shows
+□ Drag & drop works (when paused)
+□ Undo/Redo works (Ctrl+Z/Y)
+□ Zoom in/out works
+□ Pan works (right-click + drag)
+□ Autosave writes to localStorage
+□ Download JSON works
+□ Auto-extract button disabled until video loads
+□ Auto-extract on load works (if enabled)
+□ FPS adjust works
+□ Multiple frames navigate correctly
+
+---
+
+Troubleshooting:
+
+1. Check console (F12) for errors
+2. Verify video format (MP4 H.264)
+3. Check MediaPipe CDN reachable (network tab)
+4. Ensure localStorage enabled in browser
+5. Try with sample-keypoints.json first
+6. Test with short video (< 10 sec) for extraction

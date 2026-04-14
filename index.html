@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>VSL Keypoint Editor - MVP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <header>
+            <h1>VSL Keypoint Editor (MVP)</h1>
+        </header>
+
+        <main>
+            <div class="controls">
+                <label class="btn">
+                    Tải Video
+                    <input id="videoUpload" type="file" accept="video/mp4" />
+                </label>
+                <label class="btn">
+                    Tải Keypoints (.json)
+                    <input id="jsonUpload" type="file" accept="application/json" />
+                </label>
+
+                <div class="nav">
+                    <button id="playBtn" title="Play video + keypoints">▶ Play</button>
+                    <button id="pauseBtn" title="Pause video + keypoints">⏸ Pause</button>
+                    <button id="prevFrame">‹ Prev Frame</button>
+                    <button id="nextFrame">Next Frame ›</button>
+                    <span id="frameInfo">Frame: - / -</span>
+                    <label class="mini">FPS:
+                        <input id="fpsInput" type="number" min="1" value="25" />
+                    </label>
+                    <label class="mini">Speed:
+                        <input id="speedInput" type="range" min="0.25" max="2" step="0.25" value="1" />
+                        <span id="speedDisplay">1.0x</span>
+                    </label>
+                    <span id="fpsStatus"
+                        style="margin-left: 15px; padding: 4px 8px; background: #f0f0f0; border-radius: 4px; font-size: 12px; font-weight: bold; display: none;">
+                        Auto-detected FPS: <span id="fpsStatusValue">--</span>
+                    </span>
+                </div>
+
+                <div class="extras">
+                    <button id="undoBtn" title="Undo (Ctrl+Z)">Undo</button>
+                    <button id="redoBtn" title="Redo (Ctrl+Y)">Redo</button>
+                    <button id="zoomOut">-</button>
+                    <button id="zoomIn">+</button>
+                    <button id="resetView">Reset View</button>
+                    <label class="mini"><input type="checkbox" id="autosaveChk" /> Autosave</label>
+                    <label class="mini"><input type="checkbox" id="autoDownloadChk" /> Auto-download after edit</label>
+                    <label class="mini"><input type="checkbox" id="autoExtractChk" /> Auto-extract on video load</label>
+                    <button id="mpExtract">Auto-extract (MediaPipe)</button>
+                </div>
+
+                <div id="extractionProgress" style="display: none; width: 100%; margin: 10px 0;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span id="extractionStatus" style="font-size: 12px; min-width: 200px;">Extraction: 0%</span>
+                        <progress id="extractionBar" style="flex: 1; height: 20px;" max="100" value="0"></progress>
+                    </div>
+                </div>
+
+                <div class="filter-controls">
+                    <label><input type="checkbox" id="showPose" checked /> Pose (body)</label>
+                    <label><input type="checkbox" id="showLeftHand" checked /> Left Hand</label>
+                    <label><input type="checkbox" id="showRightHand" checked /> Right Hand</label>
+                    <label><input type="checkbox" id="showFace" checked /> Face</label>
+                    <span id="pointCount" style="margin-left: 10px; font-weight: bold;">Points: 0</span>
+                </div>
+
+                <button id="saveBtn" class="save">Lu / T3i xu91ng JSON</button>
+            </div>
+
+            <div class="player-wrap">
+                <div id="viewport">
+                    <video id="video" crossorigin="anonymous" controls></video>
+                    <canvas id="overlay"></canvas>
+                </div>
+            </div>
+
+            <div id="tooltip" class="tooltip" style="display:none"></div>
+
+            <div class="help">
+                <p>Hướng dẫn ngắn: Tải video và JSON, dừng video tại khung cần sửa, click vào điểm để kéo thả, sau đó
+                    nhấn "Lưu" để tải file đã chỉnh.</p>
+            </div>
+        </main>
+
+        <footer>
+            <small>Simple MVP — client-side only</small>
+        </footer>
+    </div>
+
+    <!-- MediaPipe Holistic from CDN (body + hands + face) -->
+    <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"></script>
+
+    <!-- MediaPipe Extractor for keypoint extraction (Holistic) -->
+    <script src="mediapipe-extractor-holistic.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
