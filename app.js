@@ -19,6 +19,7 @@
     const extractionProgress = document.getElementById('extractionProgress');
     const extractionStatus = document.getElementById('extractionStatus');
     const extractionBar = document.getElementById('extractionBar');
+    const showVideoChk = document.getElementById('showVideoChk');
 
     let state = {
         fps: parseInt(fpsInput.value, 10) || 25,
@@ -30,7 +31,8 @@
         videoSize: { w: 640, h: 480 },
         visibleTypes: { pose: true, leftHand: true, rightHand: true, face: true },
         isPlaying: false,
-        playbackSpeed: 1.0
+        playbackSpeed: 1.0,
+        showOriginalVideo: true  // Toggle to show/hide original video
     };
 
     // view transform for zoom/pan - now for BOTH video and canvas
@@ -316,9 +318,27 @@
         const h = state.videoSize.h;
         canvas.width = w; // clears canvas
         canvas.height = h;
-        // scale canvas CSS to match displayed video size
-        canvas.style.width = video.clientWidth + 'px';
-        canvas.style.height = video.clientHeight + 'px';
+
+        // Calculate canvas CSS size based on visibility
+        let displayWidth = video.clientWidth;
+        let displayHeight = video.clientHeight;
+
+        // If video is hidden, use state.videoSize as display size
+        if (!state.showOriginalVideo || displayWidth === 0 || displayHeight === 0) {
+            // Get viewport container size
+            const viewport = document.getElementById('viewport');
+            if (viewport) {
+                const rect = viewport.getBoundingClientRect();
+                displayWidth = rect.width > 0 ? rect.width : w;
+                displayHeight = rect.height > 0 ? rect.height : h;
+            } else {
+                displayWidth = w;
+                displayHeight = h;
+            }
+        }
+
+        canvas.style.width = displayWidth + 'px';
+        canvas.style.height = displayHeight + 'px';
 
         const frameIdx = getCurrentFrameIndex();
         if (!state.frames || !state.frames[frameIdx]) {
@@ -327,6 +347,12 @@
         }
         const points = getFrameKeypoints(state.frames[frameIdx]);
         if (!Array.isArray(points)) return;
+
+        // If video is hidden, draw black background on canvas
+        if (!state.showOriginalVideo) {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
 
         // apply view transform
         ctx.save();
@@ -802,6 +828,24 @@
     });
     if (showFaceChk) showFaceChk.addEventListener('change', (e) => {
         state.visibleTypes.face = e.target.checked;
+        drawCurrentFrame();
+    });
+
+    if (showVideoChk) showVideoChk.addEventListener('change', (e) => {
+        state.showOriginalVideo = e.target.checked;
+        // Toggle video visibility
+        if (video) {
+            video.style.display = e.target.checked ? 'block' : 'none';
+        }
+        // Add/remove class to apply CSS styling
+        const viewport = document.getElementById('viewport');
+        if (viewport) {
+            if (e.target.checked) {
+                viewport.classList.remove('video-hidden');
+            } else {
+                viewport.classList.add('video-hidden');
+            }
+        }
         drawCurrentFrame();
     });
 

@@ -83,6 +83,27 @@ header h1 {
     left: 0;
     top: 0;
     z-index: 2;
+    display: block;
+}
+
+/* When video is hidden, show canvas as main element */
+#viewport.video-hidden {
+    background: #000 !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    width: 100%;
+}
+
+#viewport.video-hidden #overlay {
+    position: relative;
+    display: block;
+    z-index: 2;
+}
+
+#viewport.video-hidden #video {
+    display: none !important;
 }
 
 #viewport {
